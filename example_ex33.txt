@@ -1,0 +1,10 @@
+a	2	0
+b	2	0
+x	3	a^2 + a b
+y	3	a b + b^2
+c	4	-1 a y + b x
+a_	1	0
+b_	1	0
+x_	2	-2 a a_ + -1 a b_ + -1 b a_
+y_	2	-1 a b_ + -1 b a_ + -2 b b_
+c_	3	a y_ + -1 b x_ + x b_ + -1 y a_
