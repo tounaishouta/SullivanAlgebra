@@ -1,17 +1,20 @@
 module SullivanAlgebra
-    ( SullivanAlgebra
+    ( SullivanAlgebra(SullivanAlgebra)
     , Polynomial(Polynomial)
     , Monomial((:*))
     , Term
     , Degree
-    , readSullivanAlgebra
+    , variables
     , monomials
+    , differential
+    , readSullivanAlgebra
+    , terms
     ) where
 
 import Prelude hiding (exponent)
 
 import Data.List        (intercalate)
-import Data.Maybe       (fromJust)
+import Data.Maybe       (fromMaybe)
 import Text.Regex.Posix ((=~))
 
 data SullivanAlgebra = SullivanAlgebra { variables :: [Variable] }
@@ -33,9 +36,6 @@ infix 8 :^
 
 coefficient :: Monomial -> Integer
 coefficient (c :* _) = c
-
--- term :: Monomial -> [Power]
--- term (_ :* t) = t
 
 base :: Power -> Variable
 base (v :^ _) = v
@@ -78,7 +78,7 @@ instance Differential Monomial where
         = 0
     differential (c :* (x : ys))
         = differential x * fromMonomial (c :* ys)
-        + fromMonomial (fromPower x) * differential (c :* ys)
+        + fromMonomial ((-1) ^ degree x :* [x]) * differential (c :* ys)
 
 instance Differential Power where
     differential (v :^ n)
@@ -195,7 +195,8 @@ readSullivanAlgebra input = alg where
                           _      -> error $ "Parse error at: " ++ str
 
     readVariable :: String -> Variable
-    readVariable = fromJust . flip lookup [ (name v, v) | v <- variables alg ]
+    readVariable str = fromMaybe (error $ "Unknown variable: " ++ str)
+                       $ lookup str [ (name v, v) | v <- variables alg ]
 
     splitOn :: Eq a => a -> [a] -> [[a]]
     splitOn delim xs = case break (== delim) xs of
@@ -204,3 +205,15 @@ readSullivanAlgebra input = alg where
 
     isInteger :: String -> Bool
     isInteger = (=~ "^-?[0-9]+$")
+
+terms :: [Variable] -> Degree -> [Term]
+terms _  0      = [[]]
+terms vs deg
+    | null vs   = []
+    | otherwise = [ (v :^ n) : t | n <- ns, t <- terms vs' (deg - n * degv) ]
+                  ++ terms vs' deg
+    where v : vs' = vs
+          degv = degree v
+          ns | even degv   = reverse [1 .. deg `div` degv]
+             | degv <= deg = [1]
+             | otherwise   = []

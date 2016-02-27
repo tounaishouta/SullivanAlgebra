@@ -18,36 +18,39 @@ space :: [Term] -> Space
 space ts = Space { dimension = dim
                  , _array    = listArray (1, dim) ts
                  , _map      = Map.fromList $ zip ts [1 .. dim]
-                 }
-                 where dim = length ts
+                 } where
+    dim = length ts
 
 fromVector :: Space -> Vector Integer -> Polynomial
-fromVector spc vec = Polynomial [ c :* (_array spc ! i) | (i, c) <- summands vec ]
+fromVector spc vec = Polynomial [ c :* (_array spc ! i)
+                                | (i, c) <- summands vec
+                                ]
 
 toVector :: Space -> Polynomial -> Vector Integer
-toVector spc poly =  Vector [ (_map spc !? t, c) | c :* t <- monomials poly ]
+toVector spc poly = Vector [ (_map spc !? t, c) | c :* t <- monomials poly ]
 
-cohomology :: SullivanAlgebra -> Degree -> [Polynomial]
-cohomology alg deg = map (fromVector cochain) $ quotient cocycle coboundary where
+basis :: Space -> [Term]
+basis = elems . _array
 
-    cochain :: Space
-    cochain = cochains !! deg
-
-    cocycle :: Basis Integer
-    cocycle = cocycles !! deg
-
-    coboundary :: Basis Integer
-    coboundary = coboundaries !! deg
+cohomology :: SullivanAlgebra -> [[Polynomial]]
+cohomology alg = [ map (fromVector cochain) $ quotient cocycle coboundary
+                 | (cochain, cocycle, coboundary)
+                   <- zip3 cochains cocycles (zero : coboundaries)
+                 ] where
 
     cochains :: [Space]
-    cochains = map (space . terms) [0 .. ]
-
-    terms :: Degree -> [Term]
-    terms = undefined alg
+    cochains = map (space . terms (variables alg)) [0 .. ]
 
     cocycles     :: [Basis Integer]
     coboundaries :: [Basis Integer]
-    (_ : cocycles, coboundaries) = unzip $ map (decompose . differentialMatrix)  [-1 .. ]
+    (cocycles, coboundaries) = unzip $ map (decompose . delta)  [0 .. ]
 
-    differentialMatrix :: Degree -> Matrix Integer
-    differentialMatrix = undefined alg toVector
+    zero :: Basis Integer
+    zero = []
+
+    delta :: Degree -> Matrix Integer
+    delta deg = matrix (dimension tgt) [ toVector tgt $ differential (1 :* t)
+                                       | t <- basis src
+                                       ] where
+        src = cochains !! deg
+        tgt = cochains !! (deg + 1)

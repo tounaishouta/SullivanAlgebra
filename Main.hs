@@ -17,7 +17,7 @@ main' path degs = do
     alg <- readSullivanAlgebra <$> readFile path
     putStrLn $ unlines
         [ unlines (map show basis)
-          ++ "dim H^" ++ show deg ++ " = " ++ show (length basis)
+          ++ "# dim H^" ++ show deg ++ " = " ++ show (length basis)
         | deg <- degs
-        , let basis = cohomology alg deg
+        , let basis = cohomology alg !! deg
         ]
