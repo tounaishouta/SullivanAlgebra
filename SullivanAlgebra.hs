@@ -1,7 +1,11 @@
 module SullivanAlgebra
-    ( Degree
+    ( SullivanAlgebra
+    , Polynomial(Polynomial)
+    , Monomial((:*))
+    , Term
+    , Degree
     , readSullivanAlgebra
-    , cohomology
+    , monomials
     ) where
 
 import Prelude hiding (exponent)
@@ -11,12 +15,12 @@ import Data.Maybe       (fromJust)
 import Text.Regex.Posix ((=~))
 
 data SullivanAlgebra = SullivanAlgebra { variables :: [Variable] }
-data Variable        = Variable { index :: ID
+data Variable        = Variable { index :: Index
                                 , name  :: String
                                 , _deg  :: Degree
                                 , _diff :: Polynomial
                                 }
-type ID              = Int
+type Index           = Int
 type Degree          = Int
 data Polynomial      = Polynomial { monomials :: [Monomial] }
 data Monomial        = Integer :* Term
@@ -170,7 +174,7 @@ readSullivanAlgebra input = alg where
     alg :: SullivanAlgebra
     alg = SullivanAlgebra $ zipWith readLine [1 .. ] (lines input)
 
-    readLine :: ID -> String -> Variable
+    readLine :: Index -> String -> Variable
     readLine i str = Variable i nam (read deg) (readPolynomial poly) where
         [nam, deg, poly] = splitOn '\t' str
 
@@ -200,8 +204,3 @@ readSullivanAlgebra input = alg where
 
     isInteger :: String -> Bool
     isInteger = (=~ "^-?[0-9]+$")
-
-cohomology :: SullivanAlgebra -> Degree -> [Polynomial]
-cohomology = undefined
--- cohomology alg 0 = [ differential v | v <- variables alg ]
--- cohomology _   _ = []

@@ -2,6 +2,7 @@ import Control.Applicative ((<$>))
 import System.Environment  (getArgs)
 
 import SullivanAlgebra
+import Cohomology
 
 main :: IO ()
 main = do
