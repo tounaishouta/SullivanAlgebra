@@ -16,7 +16,7 @@ main' :: FilePath -> [Degree] -> IO ()
 main' path degs = do
     alg <- readSullivanAlgebra <$> readFile path
     putStrLn $ unlines
-        [ unlines (map show basis)
+        [ unlines [ show deg ++ ":\t" ++ show poly | poly <- basis ]
           ++ "# dim H^" ++ show deg ++ " = " ++ show (length basis)
         | deg <- degs
         , let basis = cohomology alg !! deg
